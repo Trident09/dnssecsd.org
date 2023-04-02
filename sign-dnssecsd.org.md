@@ -14,14 +14,14 @@ Install random number generator
 note: it is unpredictable random number generator to enhance the encryption operation in the server
 
 install
-$ sudo apt install haveged
+	$ sudo apt install haveged
 
-	start the service
-$ sudo systemctl enable haveged
-$ sudo systemctl start haveged
+start the service
+	$ sudo systemctl enable haveged
+	$ sudo systemctl start haveged
 
-	veryfiy
-$ ps -aux | grep haveged
+veryfiy
+	$ ps -aux | grep haveged
 
 
 Signiner server configuration
