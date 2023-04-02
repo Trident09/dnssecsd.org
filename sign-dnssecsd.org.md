@@ -126,19 +126,4 @@ Note: The DS record should be added to the parent zone using the registrar/regis
 		http://dnsviz.net
 		https://dnssec-analyzer.verisignlabs.com/
 
-
-# more information
-===================
-zone file "db.dnssecsd.org"
-
-$TTL	86400
-dnssecsd.org.	IN	SOA	a.mail.sd.	admin.a.mail.sd.	(
-		20	;serial
-		604800	;Refresh
-		86400	;Retry
-		2419200	;Expire
-		86400 )	;Negative
-;
-dnssecsd.org.	IN	NS	a.mail.sd.
-dnssecsd.org.	IN	NS	b.mail.sd.
-dnssecsd.org.	IN	A	103.8.25.36	
+	
