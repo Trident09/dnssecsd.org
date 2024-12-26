@@ -1,0 +1,53 @@
+logging {
+        channel query-log {
+                file "log/query" versions 5 ;
+                print-category yes;
+                print-severity yes;
+                print-time yes;
+                severity info;
+        };
+        channel xfer-log {
+                file "log/xfer" versions 10 ;
+                print-category yes;
+                print-severity yes;
+                print-time yes;
+                severity info;
+        };
+        channel debug-log {
+                file "log/debug" versions 3 ;
+                print-category yes;
+                print-severity yes;
+                print-time yes;
+                severity debug;
+        };
+        channel info-log {
+                file "log/info" versions 3 ;
+                print-category yes;
+                print-severity yes;
+                print-time yes;
+                severity info;
+        };
+        channel update-log {
+                file "log/update" versions 3 ;
+                print-category yes;
+                print-severity yes;
+                print-time yes;
+                severity info;
+        };
+        channel dnssec-log {
+                file "log/dnssec" ;
+                print-time yes;
+                print-category yes;
+                print-severity yes;
+                severity debug 3;
+        };
+
+        category queries { query-log;};
+        category lame-servers { null; };
+        category xfer-in { xfer-log; };
+        category xfer-out { xfer-log; };
+        category notify { xfer-log; info-log; };
+        category update { update-log; };
+        category general { debug-log; info-log; };
+        category dnssec { dnssec-log; };
+};
