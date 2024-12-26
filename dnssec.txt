@@ -1,144 +1,132 @@
-DNSSEC Signing(dnssecsd.org)
-------------------------------
+DNSSEC Signing
+--------------
+
+domain: labx.dnssecsd.org 
+NS: nsx.pi.sd
 
 
-# Information
-name servers
-	a.mail.sd
-	b.mail.sd
+
+;Install/configure bind9
+========================
+
+sudo apt-get update
+sudo apt-get install bind9 bind9utils dnsutils
 
 
-Install random number generator
-===============================
+sudo vim /etc/bind/named.conf.options
+' 
+{
+...
+	listen-on { 127.0.0.1; x.x.x.x; };
+	zone-statistics yes;
+    	version none;
+    	hostname none;
+	allow-transfer {none; };
+	recursion no; 
+...
+};
+'
 
-note: it is unpredictable random number generator to enhance the encryption operation in the server
 
-install
-$ sudo apt install haveged
-
-	start the service
-$ sudo systemctl enable haveged
-$ sudo systemctl start haveged
-
-	veryfiy
-$ ps -aux | grep haveged
+sudo systemctl enable named
+sudo systemctl restart named
+sudo netstat -putan | grep 53
 
 
-Signiner server configuration
+; logs 
+=======
+sudo mkdir /var/cache/bind/log
+sudo chown -R bind:bind /var/cache/bind/log
+sudo vim /etc/bind/named.conf.log
+	link: https://raw.githubusercontent.com/wdelnour/dnssecsd.org/refs/heads/main/named.conf.log
+
+sudo vim /etc/bind/named.conf
+'
+include "/etc/bind/named.conf.log";
+'
+
+sudo systemctl restart named
+ll /var/cache/bind/log/
+
+
+; Create zone 
+=============
+sudo mkdir /var/cache/bind/master
+sudo vim /var/cache/bind/master/db.labx.dnssecsd.org
+	link: https://raw.githubusercontent.com/wdelnour/dnssecsd.org/refs/heads/main/db.labx.dnssecsd.org
+
+
+sudo chown -R bind:bind /var/cache/bind/
+
+sudo vim /etc/bind/named.conf.local
+'
+zone "labx.dnssecsd.org." {
+        type master;
+        file "master/db.labx.dnssecsd.org";
+        masterfile-format text;
+};
+'
+
+sudo systemctl restart named
+dig @localhost labx.dnssecsd.org
+dig @localhost labx.dnssecsd.org soa 
+dig @localhost labx.dnssecsd.org mx 
+
+
+; Sign labx.dnssecsd.org zone 
 =============================
 
-1. Enable DNSSEC in the configuration file
+; Generate key pairs (KSK, ZSK)
+sudo mkdir /var/cache/bind/keys
+cd /var/cache/bind/keys
 
+note: Algorithm 13, Elliptic Curve Digital Signing Algorithm (ECDSA) was selected for this lab purpose. 
 
-	Check the bind9 version
-		# named -V
-	
-	Create keys directory
-		# mkdir /var/bind9/chroot/var/cache/bind/keys
-	
-	Configure options
-		# vim /etc/bind/named.conf.options
+; ZSK
+sudo dnssec-keygen -3 -a ECDSAP256SHA256 labx.dnssecsd.org
 
-	options {
-    ...
-    key-directory "/var/cache/bind/keys";
-	dnssec-enable yes;
-    ...
-	};
+	"-3" enables the use of the NSEC3
+	"-a ECDSAP256SHA256" is an elliptic curve-based algorithm with a 256-bit key length.
 
-2. Generate key pairs (KSK, ZSK)
+; KSK
+sudo dnssec-keygen -f KSK -3 -a ECDSAP256SHA256 labx.dnssecsd.org
 
-Algorithm 13, Elliptic Curve Digital Signing Algorithm (ECDSA) was selected.
+	"-f KSK" generate Key Signing Key (KSK)
+	"-3" enables the use of the NSEC3
+	"-a ECDSAP256SHA256" is an elliptic curve-based algorithm with a 256-bit key length.
 
-	Generate ZSK
-		# cd /var/bind9/chroot/var/cache/bind/keys
-		# dnssec-keygen -3 -a ECDSAP256SHA256 dnssecsd.org
-	
-	Generate KSK
-		# dnssec-keygen -fk -3 -a ECDSAP256SHA256 dnssecsd.org
-		# chown -R bind:root /var/bind9/chroot/var/cache/bind/keys
+sudo chown -R bind:bind /var/cache/bind/keys
 
-info:
-	-3	NSEC3	; https://datatracker.ietf.org/doc/rfc9276/
-	-a	Algorithm
-	-fk	flag ksk ; to be reviewed and replaced by 'KSK'
-
-	
-
-note: Algorithm 13 is selected 
-source: https://www.iana.org/assignments/dns-sec-alg-numbers/dns-sec-alg-numbers.xhtml
-		https://www.rfc-editor.org/rfc/rfc6605.html
-
-3. Publish the public key
-
-	Ensure the generated keys are located in the directory path included in the named.conf.option file.
-	fix the chown to bind:root
-
-4. Signing the .sd zone and Publish the new zone file
-
-	inline Signing will be automated by bind9. add the following configuration in the .sd zone part.
-
-		# vim /etc/bind/named.conf.local
-
-
-	.....
-zone "dnssecsd.org." {
+sudo vim /etc/bind/named.conf.local 
+'
+zone "labx.dnssecsd.org." {
         type master;
-        file "master/db.dnssecsd.org";
+        file "master/db.labx.dnssecsd.org";
         masterfile-format text;
-        # publish and activate dnssec keys:
-		auto-dnssec maintain;
-		# use inline signing:
+        auto-dnssec maintain;
         inline-signing yes;
+        key-directory "/var/cache/bind/keys";
 };
-	.....
+'
 
-	use rndc to load the new keys and do inline signing
-		# rndc reload
-		# rndc reconfig
-		# rndc loadkeys dnssecsd.org
+	"auto-dnssec maintain;" enables BIND to automatically manage DNSSEC signing and key maintenance for the zone.
+	"inline-signing yes;" allows BIND to keep the unsigned zone file separate while maintaining a signed version automatically.
+	"key-directory "/var/cache/bind/keys";" specifies the directory where DNSSEC keys are stored.
 
-note: the generated files will not be readable, the file will be like "db.sd.signed", the zone configuration will point to the new signed file.
+sudo rndc reload
+dig @localhost dnskey labx.dnssecsd.org 
+dig @localhost +dnssec +multiline labx.dnssecsd.org any
 
-5. Testing
+; Generate DS record
+cd /var/cache/bind/keys
+sudo dnssec-dsfromkey <KSK.key public key>
 
-		dig @localhost +dnssec +multiline dnssecsd.org any
-		dig @localhost +dnssec dnssecsd.org any
+'
+labx.dnssecsd.org. IN DS 19670 13 2 4F5A5C5BB25D4EA2D946EDC62918A91CFAE76BA15C12B80DF377841A1D705FB9
+'
+
+note: send to the parent zone, the parent zone admin will sign and publish
+
+dig @a.mail.sd +dnssec labx.dnssecsd.org. DS 
 		http://dnsviz.net
 		https://dnssec-analyzer.verisignlabs.com/
-
-
-6. Push the DS record to the parent (.org)
-	RFC 7344	automating DNSSEC delegation trust maintenance
-	RFC 7477	child to parent synchronization in dns
-
-
-		# dnssec-dsfromkey <KSK.key public key>
-
-
-Note: The DS record should be added to the parent zone using the registrar/registry panel.
-
-
-7. Testing again once the DS is in the parent zone. 
-
-		dig @localhost +dnssec +multiline dnssecsd.org any
-		dig @localhost +dnssec dnssecsd.org any
-		http://dnsviz.net
-		https://dnssec-analyzer.verisignlabs.com/
-
-
-# more information
-===================
-zone file "db.dnssecsd.org"
-
-$TTL	86400
-dnssecsd.org.	IN	SOA	a.mail.sd.	admin.a.mail.sd.	(
-		20	;serial
-		604800	;Refresh
-		86400	;Retry
-		2419200	;Expire
-		86400 )	;Negative
-;
-dnssecsd.org.	IN	NS	a.mail.sd.
-dnssecsd.org.	IN	NS	b.mail.sd.
-dnssecsd.org.	IN	A	103.8.25.36	
