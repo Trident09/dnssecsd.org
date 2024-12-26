@@ -1,6 +1,6 @@
 $TTL 10800	; 3 hours
 labx.dnssecsd.org.		IN SOA	nsx.pi.sd. noc.pi.sd. (
-				2024042905 ; serial
+				2024120001 ; serial
 				10800      ; refresh (3 hours)
 				3600       ; retry (1 hour)
 				604800     ; expire (1 week)
@@ -8,7 +8,7 @@ labx.dnssecsd.org.		IN SOA	nsx.pi.sd. noc.pi.sd. (
 				)
 
 ;NS
-dnssecsd.org.	IN	NS	nsx.pi.sd.
+labx.dnssecsd.org.	IN	NS	nsx.pi.sd.
 
 ;RECORDS
 labx.dnssecsd.org.	800	IN	A	102.130.255.x
