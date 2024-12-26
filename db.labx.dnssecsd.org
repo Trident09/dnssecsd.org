@@ -1,0 +1,16 @@
+$TTL 10800	; 3 hours
+labx.dnssecsd.org.		IN SOA	nsx.pi.sd. noc.pi.sd. (
+				2024042905 ; serial
+				10800      ; refresh (3 hours)
+				3600       ; retry (1 hour)
+				604800     ; expire (1 week)
+				10800      ; minimum (3 hours)
+				)
+
+;NS
+dnssecsd.org.	IN	NS	nsx.pi.sd.
+
+;RECORDS
+labx.dnssecsd.org.	800	IN	A	102.130.255.x
+mail.labx.dnssecsd.org.	800	IN	A	102.130.255.x
+labx.dnssecsd.org.	800	IN	MX	0	mail.labx.dnssecsd.org.
