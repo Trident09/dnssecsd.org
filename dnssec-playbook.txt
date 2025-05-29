@@ -22,6 +22,7 @@ sudo vim /etc/bind/named.conf.options
     	version none;
     	hostname none;
 	allow-transfer {none; };
+	auth-nxdomain no;
 	recursion no; 
 ...
 };
