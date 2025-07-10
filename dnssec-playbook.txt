@@ -17,7 +17,7 @@ sudo vim /etc/bind/named.conf.options
 ' 
 {
 ...
-	listen-on-v6 { 2abc:x:x:x:x:x:x:x; }; 
+	#listen-on-v6 { 2abc:x:x:x:x:x:x:x; }; 
 	listen-on { 127.0.0.1; x.x.x.x; };
 	zone-statistics yes;
     	version none;
