@@ -36,8 +36,8 @@ sudo systemctl status named
 sudo netstat -putan | grep 53
 
 
-; logs 
-=======
+; logs (OPTIONAL)
+=================
 sudo mkdir /var/cache/bind/log
 sudo chown -R bind:bind /var/cache/bind/log
 sudo vim /etc/bind/named.conf.log
