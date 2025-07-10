@@ -32,6 +32,7 @@ sudo vim /etc/bind/named.conf.options
 
 sudo systemctl enable named
 sudo systemctl restart named
+sudo systemctl status named
 sudo netstat -putan | grep 53
 
 
