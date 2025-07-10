@@ -12,5 +12,6 @@ labx.dnssecsd.org.	IN	NS	nsx.pi.sd.
 
 ;RECORDS
 labx.dnssecsd.org.	800	IN	A	102.130.255.x
+labx.dnssecsd.org.	800	IN	AAAA	2405:3800:8b9:b60:7915:5f8c:b089:deb4
 mail.labx.dnssecsd.org.	800	IN	A	102.130.255.x
 labx.dnssecsd.org.	800	IN	MX	0	mail.labx.dnssecsd.org.
