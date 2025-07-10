@@ -72,6 +72,7 @@ zone "labx.dnssecsd.org." {
 
 sudo systemctl restart named
 dig @localhost labx.dnssecsd.org
+dig @localhost labx.dnssecsd.org aaaa
 dig @localhost labx.dnssecsd.org soa 
 dig @localhost labx.dnssecsd.org mx 
 
