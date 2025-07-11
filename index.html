@@ -1053,6 +1053,64 @@ labx.dnssecsd.org. IN DS 19670 13 2 4F5A5C5BB25D4EA2D946EDC62918A91CFAE76BA15C12
 					online validators show a complete chain of trust from the
 					root zone to your domain.
 				</div>
+
+				<div
+					class="section-header"
+					style="margin-top: 80px"
+				>
+					<h3
+						class="section-title"
+						style="font-size: 28px"
+					>
+						DNSViz Visualization
+					</h3>
+					<p class="section-subtitle">
+						Visual representation of the DNSSEC chain of trust for
+						labx.dnssecsd.org
+					</p>
+				</div>
+
+				<div
+					class="card"
+					style="max-width: 100%; text-align: center; padding: 40px"
+				>
+					<img
+						src="https://i.imgur.com/SqZshop.png"
+						alt="DNSViz visualization showing DNSSEC chain of trust for labx.dnssecsd.org"
+						style="
+							max-width: 100%;
+							height: auto;
+							border-radius: 8px;
+							box-shadow: var(--shadow-md);
+							border: 1px solid var(--border-color);
+						"
+					/>
+					<p
+						style="
+							margin-top: 20px;
+							color: var(--text-secondary);
+							font-style: italic;
+						"
+					>
+						DNSViz analysis showing the complete DNSSEC validation
+						path from root to labx.dnssecsd.org
+					</p>
+				</div>
+
+				<div
+					class="alert alert-info"
+					style="margin-top: 32px"
+				>
+					<strong>Understanding the Visualization:</strong><br />
+					• <strong>Green boxes:</strong> Validated DNSSEC
+					signatures<br />
+					• <strong>Lines and arrows:</strong> Show the delegation
+					path from root zone<br />
+					• <strong>Key symbols:</strong> Represent DNSKEY and DS
+					records<br />
+					• <strong>Complete chain:</strong> Indicates successful
+					DNSSEC implementation
+				</div>
 			</section>
 		</main>
 
