@@ -1,0 +1,1126 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<meta charset="UTF-8" />
+		<meta
+			name="viewport"
+			content="width=device-width, initial-scale=1.0"
+		/>
+		<title>DNSSEC Explained - Secure DNS Implementation Guide</title>
+		<link
+			href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap"
+			rel="stylesheet"
+		/>
+		<style>
+			:root {
+				--primary-color: #1a1a1a;
+				--secondary-color: #f8f9fa;
+				--accent-color: #6366f1;
+				--text-primary: #1a1a1a;
+				--text-secondary: #6b7280;
+				--border-color: #e5e7eb;
+				--success-color: #10b981;
+				--warning-color: #f59e0b;
+				--error-color: #ef4444;
+				--background-white: #ffffff;
+				--background-light: #f9fafb;
+				--shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+				--shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1);
+				--shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1);
+			}
+
+			* {
+				margin: 0;
+				padding: 0;
+				box-sizing: border-box;
+			}
+
+			body {
+				font-family: "Inter", -apple-system, BlinkMacSystemFont,
+					"Segoe UI", sans-serif;
+				line-height: 1.6;
+				color: var(--text-primary);
+				background-color: var(--background-white);
+				font-size: 16px;
+				overflow-x: hidden;
+			}
+
+			.container {
+				max-width: 1200px;
+				margin: 0 auto;
+				padding: 0 24px;
+			}
+
+			/* Header */
+			header {
+				background: var(--background-white);
+				border-bottom: 1px solid var(--border-color);
+				position: sticky;
+				top: 0;
+				z-index: 100;
+				backdrop-filter: blur(10px);
+			}
+
+			nav {
+				display: flex;
+				justify-content: space-between;
+				align-items: center;
+				padding: 16px 0;
+			}
+
+			.logo {
+				font-size: 24px;
+				font-weight: 700;
+				color: var(--primary-color);
+				text-decoration: none;
+			}
+
+			.nav-links {
+				display: flex;
+				list-style: none;
+				gap: 32px;
+			}
+
+			.nav-links a {
+				color: var(--text-secondary);
+				text-decoration: none;
+				font-weight: 500;
+				transition: color 0.2s ease;
+			}
+
+			.nav-links a:hover {
+				color: var(--accent-color);
+			}
+
+			/* Hero Section */
+			.hero {
+				background: linear-gradient(
+					135deg,
+					var(--background-white) 0%,
+					var(--background-light) 100%
+				);
+				padding: 80px 0 120px;
+				text-align: center;
+			}
+
+			.hero h1 {
+				font-size: clamp(32px, 5vw, 56px);
+				font-weight: 700;
+				margin-bottom: 24px;
+				line-height: 1.2;
+			}
+
+			.hero p {
+				font-size: 20px;
+				color: var(--text-secondary);
+				max-width: 600px;
+				margin: 0 auto 40px;
+			}
+
+			.cta-button {
+				display: inline-block;
+				background: var(--accent-color);
+				color: white;
+				padding: 16px 32px;
+				border-radius: 8px;
+				text-decoration: none;
+				font-weight: 600;
+				transition: all 0.2s ease;
+				box-shadow: var(--shadow-md);
+			}
+
+			.cta-button:hover {
+				background: #5146e5;
+				transform: translateY(-2px);
+				box-shadow: var(--shadow-lg);
+			}
+
+			/* Main Content */
+			main {
+				padding: 80px 0;
+			}
+
+			.section {
+				margin-bottom: 120px;
+			}
+
+			.section-header {
+				text-align: center;
+				margin-bottom: 64px;
+			}
+
+			.section-title {
+				font-size: 36px;
+				font-weight: 700;
+				margin-bottom: 16px;
+			}
+
+			.section-subtitle {
+				font-size: 18px;
+				color: var(--text-secondary);
+				max-width: 600px;
+				margin: 0 auto;
+			}
+
+			/* Cards */
+			.card-grid {
+				display: grid;
+				grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+				gap: 32px;
+				margin-top: 48px;
+			}
+
+			.card {
+				background: var(--background-white);
+				border: 1px solid var(--border-color);
+				border-radius: 12px;
+				padding: 32px;
+				box-shadow: var(--shadow-sm);
+				transition: all 0.3s ease;
+			}
+
+			.card:hover {
+				box-shadow: var(--shadow-lg);
+				transform: translateY(-4px);
+			}
+
+			.card-icon {
+				width: 48px;
+				height: 48px;
+				background: var(--accent-color);
+				border-radius: 8px;
+				display: flex;
+				align-items: center;
+				justify-content: center;
+				margin-bottom: 20px;
+				font-size: 24px;
+				color: white;
+			}
+
+			.card h3 {
+				font-size: 20px;
+				font-weight: 600;
+				margin-bottom: 12px;
+			}
+
+			.card p {
+				color: var(--text-secondary);
+				line-height: 1.6;
+			}
+
+			/* Steps */
+			.steps-container {
+				display: grid;
+				gap: 48px;
+				margin-top: 48px;
+			}
+
+			.step {
+				display: grid;
+				grid-template-columns: auto 1fr;
+				gap: 32px;
+				align-items: start;
+			}
+
+			.step-number {
+				width: 48px;
+				height: 48px;
+				background: var(--accent-color);
+				color: white;
+				border-radius: 50%;
+				display: flex;
+				align-items: center;
+				justify-content: center;
+				font-weight: 700;
+				font-size: 18px;
+				flex-shrink: 0;
+			}
+
+			.step-content h3 {
+				font-size: 24px;
+				font-weight: 600;
+				margin-bottom: 16px;
+			}
+
+			.step-content p {
+				color: var(--text-secondary);
+				margin-bottom: 16px;
+			}
+
+			/* Code Blocks */
+			.code-block {
+				background: var(--primary-color);
+				color: #e5e7eb;
+				padding: 24px;
+				border-radius: 8px;
+				font-family: "Monaco", "Menlo", "Ubuntu Mono", monospace;
+				font-size: 14px;
+				overflow-x: auto;
+				margin: 16px 0;
+				border: 1px solid #374151;
+			}
+
+			.code-block pre {
+				margin: 0;
+				white-space: pre-wrap;
+			}
+
+			.command {
+				color: #10b981;
+			}
+
+			.comment {
+				color: #9ca3af;
+				font-style: italic;
+			}
+
+			/* Command List */
+			.command-list {
+				background: var(--background-light);
+				border: 1px solid var(--border-color);
+				border-radius: 8px;
+				padding: 24px;
+				margin: 16px 0;
+			}
+
+			.command-list h4 {
+				margin-bottom: 16px;
+				color: var(--text-primary);
+				font-weight: 600;
+			}
+
+			.command-list ul {
+				list-style: none;
+				padding: 0;
+			}
+
+			.command-list li {
+				padding: 8px 0;
+				border-bottom: 1px solid var(--border-color);
+			}
+
+			.command-list li:last-child {
+				border-bottom: none;
+			}
+
+			.command-list code {
+				background: var(--primary-color);
+				color: #10b981;
+				padding: 4px 8px;
+				border-radius: 4px;
+				font-family: "Monaco", "Menlo", "Ubuntu Mono", monospace;
+				font-size: 13px;
+			}
+
+			/* Alert Boxes */
+			.alert {
+				padding: 20px;
+				border-radius: 8px;
+				margin: 20px 0;
+				border-left: 4px solid;
+			}
+
+			.alert-info {
+				background: #eff6ff;
+				border-color: var(--accent-color);
+				color: #1e40af;
+			}
+
+			.alert-warning {
+				background: #fffbeb;
+				border-color: var(--warning-color);
+				color: #92400e;
+			}
+
+			.alert-success {
+				background: #ecfdf5;
+				border-color: var(--success-color);
+				color: #065f46;
+			}
+
+			/* Zone File Display */
+			.zone-file {
+				background: var(--background-light);
+				border: 1px solid var(--border-color);
+				border-radius: 8px;
+				padding: 24px;
+				margin: 20px 0;
+			}
+
+			.zone-file h4 {
+				margin-bottom: 16px;
+				color: var(--text-primary);
+				font-weight: 600;
+			}
+
+			.zone-content {
+				font-family: "Monaco", "Menlo", "Ubuntu Mono", monospace;
+				font-size: 13px;
+				line-height: 1.5;
+				background: white;
+				padding: 16px;
+				border-radius: 4px;
+				border: 1px solid var(--border-color);
+				overflow-x: auto;
+			}
+
+			/* Footer */
+			footer {
+				background: var(--primary-color);
+				color: white;
+				padding: 60px 0 40px;
+				text-align: center;
+			}
+
+			footer h3 {
+				margin-bottom: 16px;
+				font-weight: 600;
+			}
+
+			footer p {
+				color: #9ca3af;
+				margin-bottom: 24px;
+			}
+
+			.footer-links {
+				display: flex;
+				justify-content: center;
+				gap: 32px;
+				margin-bottom: 32px;
+			}
+
+			.footer-links a {
+				color: #9ca3af;
+				text-decoration: none;
+				transition: color 0.2s ease;
+			}
+
+			.footer-links a:hover {
+				color: white;
+			}
+
+			/* Responsive Design */
+			@media (max-width: 768px) {
+				.container {
+					padding: 0 16px;
+				}
+
+				.nav-links {
+					display: none;
+				}
+
+				.hero {
+					padding: 60px 0 80px;
+				}
+
+				.card-grid {
+					grid-template-columns: 1fr;
+				}
+
+				.step {
+					grid-template-columns: 1fr;
+					gap: 16px;
+				}
+
+				.step-number {
+					width: 40px;
+					height: 40px;
+					font-size: 16px;
+				}
+
+				.footer-links {
+					flex-direction: column;
+					gap: 16px;
+				}
+			}
+
+			/* Smooth Scrolling */
+			html {
+				scroll-behavior: smooth;
+			}
+
+			/* Selection */
+			::selection {
+				background: var(--accent-color);
+				color: white;
+			}
+		</style>
+	</head>
+	<body>
+		<header>
+			<nav class="container">
+				<a
+					href="#"
+					class="logo"
+					>DNSSEC Guide</a
+				>
+				<ul class="nav-links">
+					<li><a href="#overview">Overview</a></li>
+					<li><a href="#setup">Setup</a></li>
+					<li><a href="#signing">Signing</a></li>
+					<li><a href="#verification">Verification</a></li>
+				</ul>
+			</nav>
+		</header>
+
+		<section class="hero">
+			<div class="container">
+				<h1>DNSSEC Implementation Guide</h1>
+				<p>
+					Learn how to secure your DNS infrastructure with DNSSEC. A
+					comprehensive guide covering installation, configuration,
+					and zone signing.
+				</p>
+				<a
+					href="#overview"
+					class="cta-button"
+					>Get Started</a
+				>
+			</div>
+		</section>
+
+		<main class="container">
+			<section
+				id="overview"
+				class="section"
+			>
+				<div class="section-header">
+					<h2 class="section-title">What is DNSSEC?</h2>
+					<p class="section-subtitle">
+						Domain Name System Security Extensions (DNSSEC) adds
+						security to DNS by enabling cryptographic verification
+						of DNS responses, protecting against cache poisoning and
+						other attacks.
+					</p>
+				</div>
+
+				<div class="card-grid">
+					<div class="card">
+						<div class="card-icon">🔒</div>
+						<h3>Authentication</h3>
+						<p>
+							DNSSEC uses digital signatures to authenticate DNS
+							responses, ensuring the data comes from the
+							authoritative source and hasn't been tampered with.
+						</p>
+					</div>
+					<div class="card">
+						<div class="card-icon">🛡️</div>
+						<h3>Data Integrity</h3>
+						<p>
+							Cryptographic hashes protect DNS data from
+							modification in transit, maintaining the integrity
+							of your DNS records.
+						</p>
+					</div>
+					<div class="card">
+						<div class="card-icon">⚡</div>
+						<h3>Chain of Trust</h3>
+						<p>
+							DNSSEC establishes a hierarchical chain of trust
+							from the root zone down to your domain, providing
+							end-to-end verification.
+						</p>
+					</div>
+				</div>
+
+				<div class="alert alert-info">
+					<strong>Domain Used:</strong> This guide demonstrates DNSSEC
+					implementation for <code>labx.dnssecsd.org</code> using the
+					name server <code>nsx.pi.sd</code>.
+				</div>
+			</section>
+
+			<section
+				id="setup"
+				class="section"
+			>
+				<div class="section-header">
+					<h2 class="section-title">
+						BIND9 Installation & Configuration
+					</h2>
+					<p class="section-subtitle">
+						Setting up a secure DNS server with proper logging and
+						zone configuration.
+					</p>
+				</div>
+
+				<div class="steps-container">
+					<div class="step">
+						<div class="step-number">1</div>
+						<div class="step-content">
+							<h3>Install BIND9</h3>
+							<p>
+								Update your system and install the necessary DNS
+								server packages.
+							</p>
+							<div class="code-block">
+								<pre><code><span class="command">sudo apt-get update</span>
+<span class="command">sudo apt-get install bind9 bind9utils dnsutils</span></code></pre>
+							</div>
+						</div>
+					</div>
+
+					<div class="step">
+						<div class="step-number">2</div>
+						<div class="step-content">
+							<h3>Configure BIND9 Options</h3>
+							<p>
+								Edit the main configuration file to set up
+								listening addresses and security settings.
+							</p>
+							<div class="code-block">
+								<pre><code><span class="command">sudo vim /etc/bind/named.conf.options</span>
+
+<span class="comment"># Configuration options:</span>
+options {
+    listen-on { 127.0.0.1; x.x.x.x; };
+    zone-statistics yes;
+    version none;
+    hostname none;
+    allow-transfer { none; };
+    auth-nxdomain no;
+    recursion no;
+};</code></pre>
+							</div>
+							<div class="alert alert-warning">
+								<strong>Security Note:</strong> Setting
+								<code>recursion no</code> and
+								<code>allow-transfer { none; }</code> enhances
+								security by preventing unauthorized zone
+								transfers and recursive queries.
+							</div>
+						</div>
+					</div>
+
+					<div class="step">
+						<div class="step-number">3</div>
+						<div class="step-content">
+							<h3>Enable and Start BIND9</h3>
+							<p>
+								Enable the service for automatic startup and
+								verify it's running correctly.
+							</p>
+							<div class="command-list">
+								<h4>Service Management Commands:</h4>
+								<ul>
+									<li>
+										<code>sudo systemctl enable named</code>
+										- Enable auto-start
+									</li>
+									<li>
+										<code
+											>sudo systemctl restart named</code
+										>
+										- Restart the service
+									</li>
+									<li>
+										<code>sudo systemctl status named</code>
+										- Check service status
+									</li>
+									<li>
+										<code
+											>sudo netstat -putan | grep 53</code
+										>
+										- Verify DNS is listening
+									</li>
+								</ul>
+							</div>
+						</div>
+					</div>
+
+					<div class="step">
+						<div class="step-number">4</div>
+						<div class="step-content">
+							<h3>Configure Logging (Optional)</h3>
+							<p>
+								Set up comprehensive logging for monitoring and
+								troubleshooting.
+							</p>
+							<div class="code-block">
+								<pre><code><span class="command">sudo mkdir /var/cache/bind/log</span>
+<span class="command">sudo chown -R bind:bind /var/cache/bind/log</span>
+<span class="command">sudo vim /etc/bind/named.conf.log</span></code></pre>
+							</div>
+
+							<div class="zone-file">
+								<h4>
+									Logging Configuration Content
+									(/etc/bind/named.conf.log):
+								</h4>
+								<div class="zone-content">
+									logging { channel query-log { file
+									"log/query" versions 5 ; print-category yes;
+									print-severity yes; print-time yes; severity
+									info; }; channel xfer-log { file "log/xfer"
+									versions 10 ; print-category yes;
+									print-severity yes; print-time yes; severity
+									info; }; channel debug-log { file
+									"log/debug" versions 3 ; print-category yes;
+									print-severity yes; print-time yes; severity
+									debug; }; channel info-log { file "log/info"
+									versions 3 ; print-category yes;
+									print-severity yes; print-time yes; severity
+									info; }; channel update-log { file
+									"log/update" versions 3 ; print-category
+									yes; print-severity yes; print-time yes;
+									severity info; }; channel dnssec-log { file
+									"log/dnssec" ; print-time yes;
+									print-category yes; print-severity yes;
+									severity debug 3; }; category queries {
+									query-log;}; category lame-servers { null;
+									}; category xfer-in { xfer-log; }; category
+									xfer-out { xfer-log; }; category notify {
+									xfer-log; info-log; }; category update {
+									update-log; }; category general { debug-log;
+									info-log; }; category dnssec { dnssec-log;
+									}; };
+								</div>
+							</div>
+
+							<p>
+								Include the logging configuration in your main
+								config:
+							</p>
+							<div class="code-block">
+								<pre><code><span class="command">sudo vim /etc/bind/named.conf</span>
+
+<span class="comment"># Add this line:</span>
+include "/etc/bind/named.conf.log";</code></pre>
+							</div>
+
+							<div class="alert alert-info">
+								<strong>Logging Features:</strong><br />
+								• <strong>Query Log:</strong> Records all DNS
+								queries (5 versions kept)<br />
+								• <strong>Transfer Log:</strong> Tracks zone
+								transfers (10 versions kept)<br />
+								• <strong>DNSSEC Log:</strong> Detailed DNSSEC
+								signing and validation events<br />
+								• <strong>Update Log:</strong> Dynamic DNS
+								update operations<br />
+								• <strong>Debug/Info Logs:</strong> General
+								server operations and debugging
+							</div>
+						</div>
+					</div>
+				</div>
+			</section>
+
+			<section class="section">
+				<div class="section-header">
+					<h2 class="section-title">Zone Configuration</h2>
+					<p class="section-subtitle">
+						Creating and configuring the DNS zone for your domain.
+					</p>
+				</div>
+
+				<div class="steps-container">
+					<div class="step">
+						<div class="step-number">1</div>
+						<div class="step-content">
+							<h3>Create Zone Directory and File</h3>
+							<div class="code-block">
+								<pre><code><span class="command">sudo mkdir /var/cache/bind/master</span>
+<span class="command">sudo vim /var/cache/bind/master/db.labx.dnssecsd.org</span></code></pre>
+							</div>
+
+							<div class="zone-file">
+								<h4>Zone File Content:</h4>
+								<div class="zone-content">
+									$TTL 10800 ; 3 hours labx.dnssecsd.org. IN
+									SOA nsx.pi.sd. noc.pi.sd. ( 2024120001 ;
+									serial 10800 ; refresh (3 hours) 3600 ;
+									retry (1 hour) 604800 ; expire (1 week)
+									10800 ; minimum (3 hours) ) ;NS
+									labx.dnssecsd.org. IN NS nsx.pi.sd. ;RECORDS
+									labx.dnssecsd.org. 800 IN A 102.130.255.x
+									labx.dnssecsd.org. 800 IN AAAA
+									2405:3800:8b9:b60:7915:5f8c:b089:deb4
+									mail.labx.dnssecsd.org. 800 IN A
+									102.130.255.x labx.dnssecsd.org. 800 IN MX 0
+									mail.labx.dnssecsd.org.
+								</div>
+							</div>
+						</div>
+					</div>
+
+					<div class="step">
+						<div class="step-number">2</div>
+						<div class="step-content">
+							<h3>Configure Zone in BIND</h3>
+							<div class="code-block">
+								<pre><code><span class="command">sudo chown -R bind:bind /var/cache/bind/</span>
+<span class="command">sudo vim /etc/bind/named.conf.local</span>
+
+<span class="comment"># Add zone configuration:</span>
+zone "labx.dnssecsd.org." {
+        type master;
+        file "master/db.labx.dnssecsd.org";
+        masterfile-format text;
+};</code></pre>
+							</div>
+						</div>
+					</div>
+
+					<div class="step">
+						<div class="step-number">3</div>
+						<div class="step-content">
+							<h3>Test Zone Configuration</h3>
+							<p>
+								Restart BIND and test your zone configuration
+								with DNS queries.
+							</p>
+							<div class="command-list">
+								<h4>Testing Commands:</h4>
+								<ul>
+									<li>
+										<code
+											>sudo systemctl restart named</code
+										>
+										- Restart BIND
+									</li>
+									<li>
+										<code
+											>dig @localhost
+											labx.dnssecsd.org</code
+										>
+										- Test A record
+									</li>
+									<li>
+										<code
+											>dig @localhost labx.dnssecsd.org
+											aaaa</code
+										>
+										- Test AAAA record
+									</li>
+									<li>
+										<code
+											>dig @localhost labx.dnssecsd.org
+											soa</code
+										>
+										- Test SOA record
+									</li>
+									<li>
+										<code
+											>dig @localhost labx.dnssecsd.org
+											mx</code
+										>
+										- Test MX record
+									</li>
+								</ul>
+							</div>
+						</div>
+					</div>
+				</div>
+			</section>
+
+			<section
+				id="signing"
+				class="section"
+			>
+				<div class="section-header">
+					<h2 class="section-title">DNSSEC Zone Signing</h2>
+					<p class="section-subtitle">
+						Generate cryptographic keys and sign your DNS zone for
+						enhanced security.
+					</p>
+				</div>
+
+				<div class="alert alert-info">
+					<strong>Algorithm Choice:</strong> This guide uses ECDSA
+					P-256 with SHA-256 (Algorithm 13), an elliptic curve-based
+					algorithm that provides strong security with smaller key
+					sizes.
+				</div>
+
+				<div class="steps-container">
+					<div class="step">
+						<div class="step-number">1</div>
+						<div class="step-content">
+							<h3>Generate DNSSEC Keys</h3>
+							<p>
+								Create both Zone Signing Key (ZSK) and Key
+								Signing Key (KSK) pairs.
+							</p>
+							<div class="code-block">
+								<pre><code><span class="command">sudo mkdir /var/cache/bind/keys</span>
+<span class="command">cd /var/cache/bind/keys</span>
+
+<span class="comment"># Generate Zone Signing Key (ZSK)</span>
+<span class="command">sudo dnssec-keygen -3 -a ECDSAP256SHA256 labx.dnssecsd.org</span>
+
+<span class="comment"># Generate Key Signing Key (KSK)</span>
+<span class="command">sudo dnssec-keygen -f KSK -3 -a ECDSAP256SHA256 labx.dnssecsd.org</span>
+
+<span class="command">sudo chown -R bind:bind /var/cache/bind/keys</span></code></pre>
+							</div>
+
+							<div class="alert alert-info">
+								<strong>Key Parameters:</strong><br />
+								• <code>-3</code> enables NSEC3 for enhanced
+								security<br />
+								• <code>-f KSK</code> designates the Key Signing
+								Key<br />
+								• <code>ECDSAP256SHA256</code> uses elliptic
+								curve cryptography
+							</div>
+						</div>
+					</div>
+
+					<div class="step">
+						<div class="step-number">2</div>
+						<div class="step-content">
+							<h3>Configure Automatic Signing</h3>
+							<p>
+								Update the zone configuration to enable
+								automatic DNSSEC maintenance.
+							</p>
+							<div class="code-block">
+								<pre><code><span class="command">sudo vim /etc/bind/named.conf.local</span>
+
+<span class="comment"># Updated zone configuration:</span>
+zone "labx.dnssecsd.org." {
+        type master;
+        file "master/db.labx.dnssecsd.org";
+        masterfile-format text;
+        auto-dnssec maintain;
+        inline-signing yes;
+        key-directory "/var/cache/bind/keys";
+};</code></pre>
+							</div>
+
+							<div class="alert alert-success">
+								<strong>Configuration Benefits:</strong><br />
+								• <code>auto-dnssec maintain</code> - Automatic
+								key management and signing<br />
+								• <code>inline-signing yes</code> - Keeps
+								unsigned and signed versions separate<br />
+								• <code>key-directory</code> - Specifies where
+								DNSSEC keys are stored
+							</div>
+						</div>
+					</div>
+
+					<div class="step">
+						<div class="step-number">3</div>
+						<div class="step-content">
+							<h3>Activate DNSSEC Signing</h3>
+							<p>
+								Reload the configuration and verify DNSSEC
+								records are generated.
+							</p>
+							<div class="command-list">
+								<h4>Verification Commands:</h4>
+								<ul>
+									<li>
+										<code>sudo rndc reload</code> - Reload
+										BIND configuration
+									</li>
+									<li>
+										<code
+											>dig @localhost dnskey
+											labx.dnssecsd.org</code
+										>
+										- View DNSKEY records
+									</li>
+									<li>
+										<code
+											>dig @localhost +dnssec +multiline
+											labx.dnssecsd.org any</code
+										>
+										- View all DNSSEC records
+									</li>
+								</ul>
+							</div>
+						</div>
+					</div>
+
+					<div class="step">
+						<div class="step-number">4</div>
+						<div class="step-content">
+							<h3>Generate DS Record</h3>
+							<p>
+								Create the DS (Delegation Signer) record for the
+								parent zone.
+							</p>
+							<div class="code-block">
+								<pre><code><span class="command">cd /var/cache/bind/keys</span>
+<span class="command">sudo dnssec-dsfromkey &lt;KSK.key public key&gt;</span>
+
+<span class="comment"># Example output:</span>
+labx.dnssecsd.org. IN DS 19670 13 2 4F5A5C5BB25D4EA2D946EDC62918A91CFAE76BA15C12B80DF377841A1D705FB9</code></pre>
+							</div>
+
+							<div class="alert alert-warning">
+								<strong>Important:</strong> Send this DS record
+								to your parent zone administrator. They must
+								sign and publish it to complete the DNSSEC chain
+								of trust.
+							</div>
+						</div>
+					</div>
+				</div>
+			</section>
+
+			<section
+				id="verification"
+				class="section"
+			>
+				<div class="section-header">
+					<h2 class="section-title">DNSSEC Verification</h2>
+					<p class="section-subtitle">
+						Validate your DNSSEC implementation and monitor its
+						status.
+					</p>
+				</div>
+
+				<div class="card-grid">
+					<div class="card">
+						<div class="card-icon">🔍</div>
+						<h3>Command Line Verification</h3>
+						<p>
+							Use dig commands to verify DNSSEC records and
+							signatures are properly configured.
+						</p>
+						<div class="command-list">
+							<ul>
+								<li>
+									<code
+										>dig @a.mail.sd +dnssec
+										labx.dnssecsd.org. DS</code
+									>
+								</li>
+								<li>
+									<code
+										>dig +dnssec +multiline
+										labx.dnssecsd.org</code
+									>
+								</li>
+							</ul>
+						</div>
+					</div>
+
+					<div class="card">
+						<div class="card-icon">🌐</div>
+						<h3>Online DNSSEC Tools</h3>
+						<p>
+							Use web-based tools to validate your DNSSEC
+							implementation and visualize the chain of trust.
+						</p>
+						<div class="command-list">
+							<ul>
+								<li>
+									<a
+										href="http://dnsviz.net"
+										target="_blank"
+										>DNSViz - Visual DNSSEC Analysis</a
+									>
+								</li>
+								<li>
+									<a
+										href="https://dnssec-analyzer.verisignlabs.com/"
+										target="_blank"
+										>Verisign DNSSEC Analyzer</a
+									>
+								</li>
+							</ul>
+						</div>
+					</div>
+
+					<div class="card">
+						<div class="card-icon">📊</div>
+						<h3>Monitoring</h3>
+						<p>
+							Regular monitoring ensures your DNSSEC
+							implementation remains functional and secure over
+							time.
+						</p>
+						<div class="command-list">
+							<ul>
+								<li>Monitor key expiration dates</li>
+								<li>Check DS record in parent zone</li>
+								<li>Validate DNSSEC chain periodically</li>
+							</ul>
+						</div>
+					</div>
+				</div>
+
+				<div class="alert alert-success">
+					<strong>Success Indicators:</strong> Your DNSSEC
+					implementation is working correctly when you can query
+					DNSKEY records, see RRSIG signatures on responses, and
+					online validators show a complete chain of trust from the
+					root zone to your domain.
+				</div>
+			</section>
+		</main>
+
+		<footer>
+			<div class="container">
+				<h3>DNSSEC Implementation Complete</h3>
+				<p>
+					Your DNS zone is now secured with DNSSEC, providing
+					authentication and integrity for DNS responses.
+				</p>
+				<div class="footer-links">
+					<a href="https://www.rfc-editor.org/rfc/rfc4033.html"
+						>RFC 4033 - DNSSEC Introduction</a
+					>
+					<a href="https://www.rfc-editor.org/rfc/rfc4034.html"
+						>RFC 4034 - DNSSEC Resource Records</a
+					>
+					<a href="https://www.rfc-editor.org/rfc/rfc4035.html"
+						>RFC 4035 - DNSSEC Protocol</a
+					>
+				</div>
+				<p style="margin-top: 32px; font-size: 14px">
+					&copy; 2025 DNSSEC Implementation Guide. Designed for
+					education and best practices.
+				</p>
+			</div>
+		</footer>
+
+		<script>
+			// Smooth scrolling for navigation links
+			document.querySelectorAll('a[href^="#"]').forEach((anchor) => {
+				anchor.addEventListener("click", function (e) {
+					e.preventDefault();
+					const target = document.querySelector(
+						this.getAttribute("href")
+					);
+					if (target) {
+						target.scrollIntoView({
+							behavior: "smooth",
+							block: "start",
+						});
+					}
+				});
+			});
+
+			// Add subtle animations on scroll
+			const observerOptions = {
+				threshold: 0.1,
+				rootMargin: "0px 0px -50px 0px",
+			};
+
+			const observer = new IntersectionObserver((entries) => {
+				entries.forEach((entry) => {
+					if (entry.isIntersecting) {
+						entry.target.style.opacity = "1";
+						entry.target.style.transform = "translateY(0)";
+					}
+				});
+			}, observerOptions);
+
+			// Observe cards and steps for animation
+			document.querySelectorAll(".card, .step").forEach((element) => {
+				element.style.opacity = "0";
+				element.style.transform = "translateY(20px)";
+				element.style.transition =
+					"opacity 0.6s ease, transform 0.6s ease";
+				observer.observe(element);
+			});
+		</script>
+	</body>
+</html>
